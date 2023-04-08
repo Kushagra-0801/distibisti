@@ -81,13 +81,13 @@ fn run<T: Workload + Default>(self_id: String, others: Vec<String>) -> Result<()
         buffer.clear();
         stdin
             .read_line(&mut buffer)
-            .context("Failed to read init message")?;
+            .context("Failed to read message")?;
         ctx.next_id += 1;
 
-        let echo_msg: Message<_> =
-            serde_json::from_str(&buffer).context("Failed to deserialize echo message")?;
-        let response = node.process(&mut ctx, echo_msg)?;
-        serde_json::to_writer(&mut stdout, &response).context("Failed to write echo response")?;
+        let msg: Message<_> =
+            serde_json::from_str(&buffer).context("Failed to deserialize message")?;
+        let response = node.process(&mut ctx, msg)?;
+        serde_json::to_writer(&mut stdout, &response).context("Failed to write response")?;
         stdout
             .write(b"\n")
             .context("A newline is needed to flush stdout")?;
