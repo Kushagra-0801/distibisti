@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 mod workloads;
 
-use workloads::{Context as Ctx, EchoNode, InitNode, UniqueIdNode, Workload};
+use workloads::{Context as Ctx, EchoNode, GossipNode, InitNode, UniqueIdNode, Workload};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 struct Message<Payload> {
@@ -38,6 +38,7 @@ fn main() -> Result<()> {
     let main_loop = match workload.as_str() {
         "echo" => run::<EchoNode>,
         "uniqueid" => run::<UniqueIdNode>,
+        "gossip" => run::<GossipNode>,
         _ => bail!("Only echo is currently implemented"),
     };
 

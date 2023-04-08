@@ -22,9 +22,11 @@ pub trait Workload {
 }
 
 mod echo;
+mod gossip;
 mod init;
 mod unique_id;
 
 pub use echo::EchoNode;
+pub use gossip::GossipNode;
 pub use init::InitNode;
 pub use unique_id::UniqueIdNode;
