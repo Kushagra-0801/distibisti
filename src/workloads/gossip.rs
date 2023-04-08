@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::{Body, Message};
@@ -12,6 +12,7 @@ type GossipMsg = u64;
 #[derive(Default)]
 pub struct GossipNode {
     store: HashSet<GossipMsg>,
+    neighbours: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,6 +48,31 @@ impl Workload for GossipNode {
         ctx: &mut Context,
         msg: Message<Self::Input<'_>>,
     ) -> Result<Message<Self::Output>> {
-        todo!()
+        let response = match msg.body.payload {
+            Incoming::Broadcast { message } => {
+                self.store.insert(message);
+                Outgoing::BroadcastOk {}
+            }
+            Incoming::Read {} => {
+                let messages = self.store.iter().copied().collect();
+                Outgoing::ReadOk { messages }
+            }
+            Incoming::Topology { mut topology } => {
+                let Some(neighbours) = topology.remove(&ctx.node_id) else {
+                    bail!("Topology did not include neighbours")
+                };
+                self.neighbours = neighbours;
+                Outgoing::TopologyOk {}
+            }
+        };
+        Ok(Message {
+            src: msg.dst,
+            dst: msg.src,
+            body: Body {
+                id: Some(ctx.next_id),
+                in_reply_to: msg.body.id,
+                payload: response,
+            },
+        })
     }
 }
