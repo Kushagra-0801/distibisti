@@ -33,6 +33,7 @@ impl Workload for InitNode {
 
     fn process(
         &mut self,
+        _this_node: &str,
         next_id: MsgId,
         msg: Message<Self::Input<'_>>,
     ) -> Result<Message<Self::Output>> {

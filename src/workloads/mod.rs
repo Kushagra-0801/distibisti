@@ -9,6 +9,7 @@ pub trait Workload {
 
     fn process(
         &mut self,
+        this_node: &str,
         next_id: MsgId,
         msg: Message<Self::Input<'_>>,
     ) -> Result<Message<Self::Output>>;
@@ -16,6 +17,8 @@ pub trait Workload {
 
 mod echo;
 mod init;
+mod unique_id;
 
 pub use echo::EchoNode;
 pub use init::InitNode;
+pub use unique_id::UniqueIdNode;

@@ -1,3 +1,5 @@
+#![allow(private_in_public)]
+
 use std::{
     env,
     io::{stdin, stdout, BufRead, Write},
@@ -8,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 mod workloads;
 
-use workloads::{EchoNode, InitNode, Workload};
+use workloads::{EchoNode, InitNode, UniqueIdNode, Workload};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 struct Message<Payload> {
@@ -35,6 +37,7 @@ fn main() -> Result<()> {
         .context("Missing workload type argument")?;
     let main_loop = match workload.as_str() {
         "echo" => run::<EchoNode>,
+        "uniqueid" => run::<UniqueIdNode>,
         _ => bail!("Only echo is currently implemented"),
     };
 
@@ -46,7 +49,7 @@ fn main() -> Result<()> {
         .context("Failed to read init message")?;
     let init_msg: Message<_> =
         serde_json::from_str(&buffer).context("Failed to deserialize init message")?;
-    let response = init_node.process(0, init_msg)?;
+    let response = init_node.process("", 0, init_msg)?;
     serde_json::to_writer(&mut stdout(), &response).context("Failed to write init response")?;
     stdout()
         .write(b"\n")
@@ -55,12 +58,13 @@ fn main() -> Result<()> {
     main_loop(init_node.this)
 }
 
-fn run<T: Workload + Default>(_self_id: String) -> Result<()> {
+fn run<T: Workload + Default>(self_id: String) -> Result<()> {
     let mut msg_id = 1;
     let mut buffer = String::new();
     let mut stdin = stdin().lock();
     let mut stdout = stdout().lock();
 
+    let mut node = T::default();
     loop {
         buffer.clear();
         stdin
@@ -70,7 +74,7 @@ fn run<T: Workload + Default>(_self_id: String) -> Result<()> {
 
         let echo_msg: Message<_> =
             serde_json::from_str(&buffer).context("Failed to deserialize echo message")?;
-        let response = T::default().process(msg_id, echo_msg)?;
+        let response = node.process(&self_id, msg_id, echo_msg)?;
         serde_json::to_writer(&mut stdout, &response).context("Failed to write echo response")?;
         stdout
             .write(b"\n")
