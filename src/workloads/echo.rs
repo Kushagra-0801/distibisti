@@ -1,9 +1,9 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::{Body, Message, MsgId};
+use crate::{Body, Message};
 
-use super::Workload;
+use super::{Context, Workload};
 
 #[derive(Default)]
 pub struct EchoNode;
@@ -29,8 +29,7 @@ impl Workload for EchoNode {
 
     fn process(
         &mut self,
-        _this_node: &str,
-        next_id: MsgId,
+        ctx: &mut Context,
         msg: Message<Self::Input<'_>>,
     ) -> Result<Message<Self::Output>> {
         let echo = msg.body.payload.echo;
@@ -38,7 +37,7 @@ impl Workload for EchoNode {
             src: msg.dst,
             dst: msg.src,
             body: Body {
-                id: Some(next_id),
+                id: Some(ctx.next_id),
                 in_reply_to: msg.body.id,
                 payload: EchoOk { echo },
             },
